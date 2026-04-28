@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResQLink — Disaster Relief Coordination</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════ NAVBAR ══════════ -->
+  <header class="navbar">
+    <div class="navbar-left">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-circle-nodes"></i>
+        </div>
+        <span class="brand-name">ResQLink</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#" class="nav-link active">Dashboard</a>
+        <a href="#" class="nav-link">Tasks</a>
+        <a href="#" class="nav-link">Volunteers</a>
+      </nav>
+    </div>
+    <div class="navbar-right">
+      <div class="coordinator-badge">
+        <div class="avatar">A</div>
+        <span>Coordinator: <strong>Admin</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════ STAT COUNTERS ══════════ -->
+  <section class="stats-row">
+    <div class="stat-card">
+      <div class="stat-left">
+        <span class="stat-number" id="stat-active">0</span>
+        <span class="stat-label">Active Tasks</span>
+      </div>
+      <div class="stat-icon-wrap stat-blue">
+        <i class="fa-solid fa-list-check"></i>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-left">
+        <span class="stat-number" id="stat-critical">0</span>
+        <span class="stat-label">Critical</span>
+      </div>
+      <div class="stat-icon-wrap stat-red">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-left">
+        <span class="stat-number" id="stat-volunteers">0</span>
+        <span class="stat-label">Volunteers</span>
+      </div>
+      <div class="stat-icon-wrap stat-purple">
+        <i class="fa-solid fa-users"></i>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-left">
+        <span class="stat-number" id="stat-completed">0</span>
+        <span class="stat-label">Completed Today</span>
+      </div>
+      <div class="stat-icon-wrap stat-green">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ MAIN LAYOUT ══════════ -->
+  <main class="main-layout">
+
+    <!-- ── Task Board ── -->
+    <section class="task-board">
+
+      <!-- Toolbar -->
+      <div class="board-toolbar">
+        <div class="filter-pills" role="group" aria-label="Filter by priority">
+          <button class="pill active" data-filter="all">All</button>
+          <button class="pill pill-critical" data-filter="critical">Critical</button>
+          <button class="pill pill-high" data-filter="high">High</button>
+          <button class="pill pill-medium" data-filter="medium">Medium</button>
+        </div>
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search tasks…"
+            aria-label="Search tasks"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <!-- Task Grid -->
+      <div class="task-grid" id="task-grid" aria-live="polite"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-state" hidden>
+        <i class="fa-solid fa-folder-open"></i>
+        <p>No tasks match your filters.</p>
+      </div>
+    </section>
+
+    <!-- ── Volunteers Sidebar ── -->
+    <aside class="volunteers-sidebar" aria-label="Available volunteers">
+      <div class="sidebar-header">
+        <h3>Available Volunteers</h3>
+        <span class="vol-count-badge" id="vol-count">0</span>
+      </div>
+      <div class="volunteer-list" id="volunteer-list"></div>
+      <button class="btn-register-vol" id="open-volunteer-modal">
+        <i class="fa-solid fa-user-plus"></i>
+        Register Volunteer
+      </button>
+    </aside>
+
+  </main>
+
+  <!-- ══════════ FAB ══════════ -->
+  <button class="fab" id="open-task-modal" aria-label="Create new task" title="New Task">
+    <i class="fa-solid fa-plus"></i>
+    <span class="fab-label">New Task</span>
+  </button>
+
+  <!-- ══════════ NEW TASK MODAL ══════════ -->
+  <div class="modal-backdrop" id="task-modal-backdrop" role="presentation">
+    <div class="modal"
+         id="task-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="task-modal-title"
+         tabindex="-1">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <h2 id="task-modal-title">Create New Task</h2>
+        </div>
+        <button class="modal-close" data-close="task-modal-backdrop" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="new-task-form" novalidate>
+
+          <div class="form-row">
+            <div class="form-group form-group-lg">
+              <label for="task-title">
+                Task Title <span class="req">*</span>
+                <span class="annotation-badge">8</span>
+              </label>
+              <input
+                type="text"
+                id="task-title"
+                placeholder="e.g. Food Distribution — Zone C"
+                maxlength="80"
+                autocomplete="off"
+                aria-required="true"
+                aria-describedby="title-error"
+              />
+              <span class="field-error" id="title-error" role="alert"></span>
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="task-priority">
+                Priority
+                <span class="annotation-badge">10</span>
+              </label>
+              <select id="task-priority">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="task-min-vol">Min. Volunteers</label>
+              <input
+                type="number"
+                id="task-min-vol"
+                min="1"
+                value="2"
+                placeholder="2"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="task-desc">
+              Description <span class="req">*</span>
+              <span class="annotation-badge">11</span>
+            </label>
+            <textarea
+              id="task-desc"
+              rows="4"
+              maxlength="200"
+              placeholder="Task details, location, special requirements… (max 200 chars)"
+              aria-required="true"
+              aria-describedby="desc-error desc-counter"
+            ></textarea>
+            <div class="desc-footer">
+              <span class="field-error" id="desc-error" role="alert"></span>
+              <span class="char-counter" id="desc-counter" aria-live="polite">
+                <span id="desc-count">0</span>/200
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Required Skills</label>
+            <div class="skills-checkboxes">
+              <label class="check-label">
+                <input type="checkbox" name="skills" value="First Aid" />
+                <span class="checkmark"></span>
+                First Aid
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="skills" value="Logistics" checked />
+                <span class="checkmark"></span>
+                Logistics
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="skills" value="Medical" />
+                <span class="checkmark"></span>
+                Medical
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="skills" value="Engineering" />
+                <span class="checkmark"></span>
+                Engineering
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="skills" value="Search & Rescue" />
+                <span class="checkmark"></span>
+                Search &amp; Rescue
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" data-close="task-modal-backdrop">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">
+              <i class="fa-solid fa-plus"></i>
+              Create Task
+              <span class="annotation-badge">12</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REGISTER VOLUNTEER MODAL ══════════ -->
+  <div class="modal-backdrop" id="vol-modal-backdrop" role="presentation">
+    <div class="modal"
+         id="vol-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="vol-modal-title"
+         tabindex="-1">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap modal-icon-green">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <h2 id="vol-modal-title">Register Volunteer</h2>
+        </div>
+        <button class="modal-close" data-close="vol-modal-backdrop" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="new-vol-form" novalidate>
+
+          <div class="form-group">
+            <label for="vol-name">
+              Full Name <span class="req">*</span>
+            </label>
+            <input
+              type="text"
+              id="vol-name"
+              placeholder="e.g. Ahmad Khalil"
+              maxlength="60"
+              autocomplete="off"
+              aria-required="true"
+              aria-describedby="vol-name-error"
+            />
+            <span class="field-error" id="vol-name-error" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="vol-email">
+              Email <span class="req">*</span>
+            </label>
+            <input
+              type="email"
+              id="vol-email"
+              placeholder="e.g. ahmad@relief.org"
+              maxlength="120"
+              autocomplete="off"
+              aria-required="true"
+              aria-describedby="vol-email-error"
+            />
+            <span class="field-error" id="vol-email-error" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="vol-role">
+              Role <span class="req">*</span>
+            </label>
+            <input
+              type="text"
+              id="vol-role"
+              placeholder="e.g. Medical Coordinator"
+              maxlength="60"
+              autocomplete="off"
+              aria-required="true"
+              aria-describedby="vol-role-error"
+            />
+            <span class="field-error" id="vol-role-error" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Skills</label>
+            <div class="skills-checkboxes">
+              <label class="check-label">
+                <input type="checkbox" name="vol-skills" value="First Aid" />
+                <span class="checkmark"></span>
+                First Aid
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="vol-skills" value="Medical" />
+                <span class="checkmark"></span>
+                Medical
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="vol-skills" value="Logistics" />
+                <span class="checkmark"></span>
+                Logistics
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="vol-skills" value="Engineering" />
+                <span class="checkmark"></span>
+                Engineering
+              </label>
+              <label class="check-label">
+                <input type="checkbox" name="vol-skills" value="Search & Rescue" />
+                <span class="checkmark"></span>
+                Search &amp; Rescue
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" data-close="vol-modal-backdrop">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary btn-green">
+              <i class="fa-solid fa-user-plus"></i>
+              Register
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script
+    src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+    crossorigin="anonymous"
+  ></script>
+  <script src="app.js"></script>
+</body>
+</html>
